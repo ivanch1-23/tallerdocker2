@@ -1,7 +1,5 @@
 # Gestor de tareas contenerizado
-## Integrantes
-- [Santiago Nadin Coronado Vasquez ]
-- [Darwin David Bracho Parra]
+
 ## Servicios
 | Servicio | Tecnología | Función |
 |---|---|---|
@@ -12,8 +10,8 @@
 - Docker Desktop abierto (Engine running)
 - Git
 ## Cómo ejecutarlo
-1. git clone https://github.com/santicova18/Taller-Docker.git
-2. cd Taller-Docker
+1. git clone https://github.com/ivanch1-23/tallerdocker2.git
+2. cd tallerdocker2
 3. Copy-Item .env.example .env
 4. docker compose up -d --build
 5. Abrir http://localhost:8080
