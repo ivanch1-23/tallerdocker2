@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor de tareas</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .contenedor {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border-radius: 16px;
+      max-width: 580px;
+      width: 100%;
+      padding: 32px 28px;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    form { display: flex; gap: 10px; margin-bottom: 20px; }
+    input {
+      flex: 1;
+      padding: 12px 16px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #f8fafc;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+    input::placeholder { color: #64748b; }
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+      filter: brightness(1.08);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      transition: all 0.2s ease;
+    }
+    li:hover {
+      border-color: #475569;
+      background: #243046;
+    }
+    li span { flex: 1; font-size: 15px; word-break: break-word; }
+    li.hecha {
+      opacity: 0.65;
+      background: #182234;
+      border-color: #273549;
+    }
+    li.hecha span {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+    .btn-completar {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .btn-completar:hover {
+      box-shadow: 0 6px 14px rgba(16, 185, 129, 0.35);
+    }
+    .btn-reabrir {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .btn-reabrir:hover {
+      box-shadow: 0 6px 14px rgba(245, 158, 11, 0.35);
+    }
+    .eliminar {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .eliminar:hover {
+      box-shadow: 0 6px 14px rgba(239, 68, 68, 0.35);
+    }
+    #estado {
+      color: #94a3b8;
+      font-size: 14px;
+      margin: 8px 0 16px 0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="contenedor">
+    <h1>Gestor de tareas</h1>
+    <form id="formulario">
+      <input id="titulo" placeholder="Nueva tarea" required>
+      <button type="submit">Agregar</button>
+    </form>
+    <p id="estado"></p>
+    <ul id="lista"></ul>
+  </div>
+
+  <script>
+    const lista = document.getElementById("lista");
+    const estado = document.getElementById("estado");
+
+    async function cargar() {
+      try {
+        const respuesta = await fetch("/api/tareas");
+        const tareas = await respuesta.json();
+        lista.innerHTML = "";
+        tareas.forEach(t => {
+          const item = document.createElement("li");
+          if (t.completada) item.classList.add("hecha");
+          const texto = document.createElement("span");
+          texto.textContent = t.titulo;
+          const marcar = document.createElement("button");
+          marcar.textContent = t.completada ? "Reabrir" : "Completar";
+          marcar.className = t.completada ? "btn-reabrir" : "btn-completar";
+          marcar.onclick = () => accion("PUT", t.id);
+          const borrar = document.createElement("button");
+          borrar.textContent = "Eliminar";
+          borrar.className = "eliminar";
+          borrar.onclick = () => accion("DELETE", t.id);
+          item.append(texto, marcar, borrar);
+          lista.appendChild(item);
+        });
+        estado.textContent = tareas.length + " tarea(s) registradas";
+      } catch (e) {
+        estado.textContent = "No fue posible conectar con la API. Intente de nuevo en unos segundos.";
+      }
+    }
+
+    async function accion(metodo, id) {
+      await fetch("/api/tareas/" + id, { method: metodo });
+      cargar();
+    }
+
+    document.getElementById("formulario").onsubmit = async (e) => {
+      e.preventDefault();
+      const campo = document.getElementById("titulo");
+      await fetch("/api/tareas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titulo: campo.value })
+      });
+      campo.value = "";
+      cargar();
+    };
+
+    cargar();
+  </script>
+</body>
+</html>
